@@ -5,20 +5,11 @@ let uploadedFileText = "";
 const localVaultFileKey = "localVault_284098x980930x902348x802346_DO_NOT_CHANGE_THIS_LINE";
 
 function encoderAccess() {
-    //alert("ACCESS");
     document.getElementById("encoderMenuContainer").style.display = "none";
     document.getElementById("encoderBgImage").style.display = "none";
-    //document.body.style.backgroundImage = "linear-gradient(#ffffff,#9eedff)";
     document.body.style.overflow = "unset";
     document.getElementById("encoderPasswordsPage").style.display = "flex";
 }
-
-
-
-//TEMPORARY TO WORK ON ACCESSED PAGE
-//encoderAccess();
-
-
 
 // Save passwords and exports the file
 function saveEncodedPasswords() {
@@ -55,10 +46,14 @@ function saveEncodedPasswords() {
 
     // Clean up
     URL.revokeObjectURL(anchor.href);
+
+    // Show success notification
+    Swal.fire({
+        icon: 'success',
+        title: 'Passwords Saved',
+        text: 'Passwords saved and file downloaded successfully!'
+    });
 }
-
-
-
 
 function copyToClipboard(text) {
     const textarea = document.createElement("textarea");
@@ -67,12 +62,15 @@ function copyToClipboard(text) {
     textarea.select();
     document.execCommand("copy");
     document.body.removeChild(textarea);
-    alert("Password copied to clipboard");
+
+    // Show success notification
+    Swal.fire({
+        icon: 'success',
+        title: 'Password Copied',
+        text: 'Password copied to clipboard successfully!'
+    });
 }
 
-
-
-// Prompts user for file upload when ACCESS button clicked. Sets uploadedFileText if uploaded file is valid.
 function encoderPromptFile() {
     let fileUpload = document.createElement("input");
     fileUpload.type = "file";
@@ -153,6 +151,19 @@ function encoderPromptFile() {
                 // Show the accessed passwords page
                 encoderAccess();
                 uploadedFileText = decryptedContent;
+
+                // Show success notification
+                Swal.fire({
+                    icon: 'success',
+                    title: 'File Uploaded',
+                    text: 'Uploaded file decrypted and passwords loaded successfully!'
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid File',
+                    text: 'The uploaded file is not a valid LocalVault file.'
+                });
             }
         };
         reader.readAsText(file);
@@ -163,23 +174,20 @@ function encoderPromptFile() {
     document.body.removeChild(fileUpload);
 }
 
-
-
 let editRow = null;
-
-/*
-function openLinkInNewTab(link) {
-    const newTab = window.open(link, "_blank");
-    newTab.focus();
-}
-*/
 
 function deletePasswordSet(row) {
     const tableBody = document.getElementById("passwordTableBody");
     tableBody.removeChild(row);
+
+    // Show success notification
+    Swal.fire({
+        icon: 'success',
+        title: 'Password Deleted',
+        text: 'Password set deleted successfully!'
+    });
 }
 
-// what happens what the EDIT button is clicked next to the password set
 function editPasswordSet(row) {
     const tableRow = row;
     const cells = tableRow.cells;
@@ -212,10 +220,6 @@ function editPasswordSet(row) {
     editRow = tableRow;
 }
 
-
-
-
-
 document.getElementById("passwordForm").addEventListener("submit", function(e) {
     e.preventDefault();
 
@@ -242,6 +246,13 @@ document.getElementById("passwordForm").addEventListener("submit", function(e) {
         cells[3].textContent = password;
 
         editRow = null;
+
+        // Show success notification
+        Swal.fire({
+            icon: 'success',
+            title: 'Password Updated',
+            text: 'Password set updated successfully!'
+        });
     } else {
         // Create a new row in the table with the input values
         const tableBody = document.getElementById("passwordTableBody");
@@ -284,6 +295,13 @@ document.getElementById("passwordForm").addEventListener("submit", function(e) {
             deletePasswordSet(newRow);
         });
         cell6.appendChild(deleteBtn);
+
+        // Show success notification
+        Swal.fire({
+            icon: 'success',
+            title: 'Password Added',
+            text: 'New password set added successfully!'
+        });
     }
 
     // Reset the form input fields
@@ -292,7 +310,6 @@ document.getElementById("passwordForm").addEventListener("submit", function(e) {
     document.getElementById("username").value = "";
     document.getElementById("password").value = "";
 });
-
 
 function editPasswordCancel() {
     document.getElementById("passwordFormCancelButton").style.display = "none";
@@ -311,5 +328,10 @@ function editPasswordCancel() {
 
     editRow = null;
 
-    document.getElementById("passwordFormSubmitButton").value = "ADD";
+    // Show info notification
+    Swal.fire({
+        icon: 'info',
+        title: 'Edit Cancelled',
+        text: 'Edit operation cancelled.'
+    });
 }

@@ -1,7 +1,6 @@
-// The stored text from the uploaded file
+
 let uploadedFileText = "";
 
-// The key to check if the uploaded file is indeed a LocalVault file. Does not affect privacy at all, just to avoid confusion.
 const localVaultFileKey = "localVault_284098x980930x902348x802346_DO_NOT_CHANGE_THIS_LINE";
 
 function encoderAccess() {
@@ -11,13 +10,11 @@ function encoderAccess() {
     document.getElementById("encoderPasswordsPage").style.display = "flex";
 }
 
-// Save passwords and exports the file
 function saveEncodedPasswords() {
     const tableBody = document.getElementById("passwordTableBody");
     const rows = tableBody.querySelectorAll("tr");
 
-    let fileContent = localVaultFileKey.toString() + "\n"; // Adding the key as the first line
-
+    let fileContent = localVaultFileKey.toString() + "\n";
     for (let i = 0; i < rows.length; i++) {
         const cells = rows[i].cells;
         const websiteName = cells[0].textContent;
@@ -29,25 +26,21 @@ function saveEncodedPasswords() {
             websiteName + "," + websiteLink + "," + username + "," + password + "\n";
     }
 
-    // Encrypt the file content using a secret passphrase
     const passphrase = "YourSecretPassphrase";
     const encryptedContent = CryptoJS.AES.encrypt(fileContent, passphrase).toString();
 
     const filename = "passwords.lclv";
     const blob = new Blob([encryptedContent], { type: "text/plain" });
 
-    // Create a temporary <a> element to trigger the download
     const anchor = document.createElement("a");
     anchor.download = filename;
     anchor.href = URL.createObjectURL(blob);
 
-    anchor.target = "_blank"; // Optional: Open the download link in a new tab or window
+    anchor.target = "_blank";
     anchor.click();
 
-    // Clean up
     URL.revokeObjectURL(anchor.href);
 
-    // Show success notification
     Swal.fire({
         icon: 'success',
         title: 'Passwords Saved',
@@ -63,7 +56,6 @@ function copyToClipboard(text) {
     document.execCommand("copy");
     document.body.removeChild(textarea);
 
-    // Show success notification
     Swal.fire({
         icon: 'success',
         title: 'Password Copied',
@@ -84,22 +76,18 @@ function encoderPromptFile() {
         reader.onload = function (e) {
             let encryptedText = reader.result;
 
-            // Decrypt the file content using the secret passphrase
             const passphrase = "YourSecretPassphrase";
             const decryptedContent = CryptoJS.AES.decrypt(encryptedText, passphrase).toString(CryptoJS.enc.Utf8);
 
-            let firstLine = decryptedContent.trim().split("\n")[0]; // Extract the first line of the text
+            let firstLine = decryptedContent.trim().split("\n")[0];
             if (firstLine.toString().replace(/\s/g, "") === localVaultFileKey.toString()) {
                 console.log("FIRST LINE MATCHES LOCALVAULT KEY");
 
-                // Remove existing rows from the table
                 const tableBody = document.getElementById("passwordTableBody");
                 tableBody.innerHTML = "";
 
-                // Split the text content by newline character
                 const rows = decryptedContent.trim().split("\n");
 
-                // Loop through the rows starting from the second row (index 1)
                 for (let i = 1; i < rows.length; i++) {
                     const rowValues = rows[i].split(",");
                     const websiteName = rowValues[0];
@@ -107,7 +95,6 @@ function encoderPromptFile() {
                     const username = rowValues[2];
                     const password = rowValues[3];
 
-                    // Create a new row in the table with the extracted values
                     const newRow = tableBody.insertRow();
 
                     const cell1 = newRow.insertCell();
@@ -124,8 +111,8 @@ function encoderPromptFile() {
 
                     const cell4 = newRow.insertCell();
                     cell4.textContent = password;
-                    cell4.classList.add("password-cell"); // Add the custom class to the password cell
-                    cell4.addEventListener("click", function() {
+                    cell4.classList.add("password-cell");
+                    cell4.addEventListener("click", function () {
                         copyToClipboard(password);
                     });
 
@@ -148,11 +135,9 @@ function encoderPromptFile() {
                     cell6.appendChild(deleteBtn);
                 }
 
-                // Show the accessed passwords page
                 encoderAccess();
                 uploadedFileText = decryptedContent;
 
-                // Show success notification
                 Swal.fire({
                     icon: 'success',
                     title: 'File Uploaded',
@@ -162,7 +147,6 @@ function encoderPromptFile() {
                 Swal.fire({
                     icon: 'error',
                     title: 'Invalid File',
-                    text: 'The uploaded file is not a valid LocalVault file.'
                 });
             }
         };
@@ -199,7 +183,6 @@ function editPasswordSet(row) {
 
     window.scrollTo(0, document.body.scrollHeight);
 
-    // Set the blank placeholder values to whatever the value in the row values are
     document.getElementById("websiteName").value = websiteName;
     document.getElementById("websiteLink").value = websiteLink;
     document.getElementById("username").value = username;
@@ -207,12 +190,10 @@ function editPasswordSet(row) {
 
     document.getElementById("passwordFormSubmitButton").value = "CHANGE?";
 
-    // Remove highlighted row class from each element that has it on it in case edited row is changed midway
     let highlightedRowsArray = Array.from(document.getElementsByClassName("highlighted-row"));
     highlightedRowsArray.forEach(row => {
         row.classList.remove("highlighted-row");
     });
-    // Add the highlighted-row class to the edited row
     tableRow.classList.add('highlighted-row');
 
     document.getElementById("passwordFormCancelButton").style.display = "inline";
@@ -220,19 +201,17 @@ function editPasswordSet(row) {
     editRow = tableRow;
 }
 
-document.getElementById("passwordForm").addEventListener("submit", function(e) {
+document.getElementById("passwordForm").addEventListener("submit", function (e) {
     e.preventDefault();
 
     document.getElementById("passwordFormSubmitButton").value = "ADD";
     document.getElementById("passwordFormCancelButton").style.display = "none";
 
-    // Remove highlighted row class from each element that has it on it
     let highlightedRowsArray = Array.from(document.getElementsByClassName("highlighted-row"));
     highlightedRowsArray.forEach(row => {
         row.classList.remove("highlighted-row");
     });
 
-    // Retrieve form input values
     const websiteName = document.getElementById("websiteName").value;
     const websiteLink = document.getElementById("websiteLink").value;
     const username = document.getElementById("username").value;
@@ -247,14 +226,12 @@ document.getElementById("passwordForm").addEventListener("submit", function(e) {
 
         editRow = null;
 
-        // Show success notification
         Swal.fire({
             icon: 'success',
             title: 'Password Updated',
             text: 'Password set updated successfully!'
         });
     } else {
-        // Create a new row in the table with the input values
         const tableBody = document.getElementById("passwordTableBody");
         const newRow = tableBody.insertRow();
 
@@ -263,7 +240,6 @@ document.getElementById("passwordForm").addEventListener("submit", function(e) {
         cell1.classList.add("websiteName-cell");
 
         const cell2 = newRow.insertCell();
-        // adds the website and handles click on website
         cell2.innerHTML = websiteLink !== "" ? `<a href="${websiteLink}" target="_blank">${websiteLink}</a>` : "";
         cell2.classList.add("websiteLink-cell");
 
@@ -273,8 +249,8 @@ document.getElementById("passwordForm").addEventListener("submit", function(e) {
 
         const cell4 = newRow.insertCell();
         cell4.textContent = password;
-        cell4.classList.add("password-cell"); // Add the custom class to the password cell
-        cell4.addEventListener("click", function() {
+        cell4.classList.add("password-cell");
+        cell4.addEventListener("click", function () {
             copyToClipboard(password);
         });
 
@@ -282,7 +258,7 @@ document.getElementById("passwordForm").addEventListener("submit", function(e) {
         const editBtn = document.createElement("span");
         editBtn.className = "edit-btn";
         editBtn.textContent = "Edit";
-        editBtn.addEventListener("click", function() {
+        editBtn.addEventListener("click", function () {
             editPasswordSet(newRow);
         });
         cell5.appendChild(editBtn);
@@ -291,12 +267,11 @@ document.getElementById("passwordForm").addEventListener("submit", function(e) {
         const deleteBtn = document.createElement("span");
         deleteBtn.className = "delete-btn";
         deleteBtn.textContent = "Delete";
-        deleteBtn.addEventListener("click", function() {
+        deleteBtn.addEventListener("click", function () {
             deletePasswordSet(newRow);
         });
         cell6.appendChild(deleteBtn);
 
-        // Show success notification
         Swal.fire({
             icon: 'success',
             title: 'Password Added',
@@ -304,7 +279,6 @@ document.getElementById("passwordForm").addEventListener("submit", function(e) {
         });
     }
 
-    // Reset the form input fields
     document.getElementById("websiteName").value = "";
     document.getElementById("websiteLink").value = "";
     document.getElementById("username").value = "";
@@ -314,13 +288,11 @@ document.getElementById("passwordForm").addEventListener("submit", function(e) {
 function editPasswordCancel() {
     document.getElementById("passwordFormCancelButton").style.display = "none";
 
-    // Reset the form input fields
     document.getElementById("websiteName").value = "";
     document.getElementById("websiteLink").value = "";
     document.getElementById("username").value = "";
     document.getElementById("password").value = "";
 
-    // Remove highlighted row class from each element that has it on it
     let highlightedRowsArray = Array.from(document.getElementsByClassName("highlighted-row"));
     highlightedRowsArray.forEach(row => {
         row.classList.remove("highlighted-row");
@@ -328,7 +300,6 @@ function editPasswordCancel() {
 
     editRow = null;
 
-    // Show info notification
     Swal.fire({
         icon: 'info',
         title: 'Edit Cancelled',

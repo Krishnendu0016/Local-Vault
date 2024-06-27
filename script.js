@@ -1,15 +1,27 @@
+// The stored text from the uploaded file
 let uploadedFileText = "";
 
+// The key to check if the uploaded file is indeed a LocalVault file. Does not affect privacy at all, just to avoid confusion.
 const localVaultFileKey = "localVault_284098x980930x902348x802346_DO_NOT_CHANGE_THIS_LINE";
 
-function encoderAccess() { 
+function encoderAccess() {
+    //alert("ACCESS");
     document.getElementById("encoderMenuContainer").style.display = "none";
-    document.getElementById("encoderBgImage").style.display = "none"; 
+    document.getElementById("encoderBgImage").style.display = "none";
+    //document.body.style.backgroundImage = "linear-gradient(#ffffff,#9eedff)";
     document.body.style.overflow = "unset";
     document.getElementById("encoderPasswordsPage").style.display = "flex";
 }
 
-async function saveEncodedPasswords() {
+
+
+//TEMPORARY TO WORK ON ACCESSED PAGE
+//encoderAccess();
+
+
+
+// Save passwords and exports the file
+function saveEncodedPasswords() {
     const tableBody = document.getElementById("passwordTableBody");
     const rows = tableBody.querySelectorAll("tr");
 
@@ -43,8 +55,10 @@ async function saveEncodedPasswords() {
 
     // Clean up
     URL.revokeObjectURL(anchor.href);
-    Swal.fire('Saved!', 'Your passwords have been saved.', 'success');
 }
+
+
+
 
 function copyToClipboard(text) {
     const textarea = document.createElement("textarea");
@@ -56,86 +70,9 @@ function copyToClipboard(text) {
     alert("Password copied to clipboard");
 }
 
-async function loadPasswords() {
-    const response = await fetch('http://localhost:3000/passwords');
-    const passwords = await response.json();
-    const passwordTableBody = document.getElementById('passwordTableBody');
 
-    passwordTableBody.innerHTML = '';
-    passwords.forEach(password => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td data-id="${password._id}">${password.websiteName}</td>
-            <td><a href="${password.websiteLink}" target="_blank">${password.websiteLink}</a></td>
-            <td>${password.username}</td>
-            <td>${password.password}</td>
-            <td class="edit-col" onclick="editPasswordSet(this.parentNode)">Edit</td>
-            <td class="delete-col" onclick="deletePassword('${password._id}')">Delete</td>
-        `;
-        passwordTableBody.appendChild(row);
-    });
-}
 
-async function deletePassword(id) {
-    await fetch(`http://localhost:3000/passwords/${id}`, {
-        method: 'DELETE'
-    });
-    loadPasswords();
-    Swal.fire('Deleted!', 'Your password has been deleted.', 'success');
-}
-
-document.getElementById("passwordForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    document.getElementById("passwordFormSubmitButton").value = "ADD";
-    document.getElementById("passwordFormCancelButton").style.display = "none";
-
-    // Remove highlighted row class from each element that has it on it
-    let highlightedRowsArray = Array.from(document.getElementsByClassName("highlighted-row"));
-    highlightedRowsArray.forEach(row => {
-        row.classList.remove("highlighted-row");
-    });
-
-    // Retrieve form input values
-    const websiteName = document.getElementById("websiteName").value;
-    const websiteLink = document.getElementById("websiteLink").value;
-    const username = document.getElementById("username").value;
-    const password = document.getElementById("password").value;
-
-    if (editRow) {
-        const cells = editRow.cells;
-        const id = cells[0].dataset.id;
-
-        await fetch(`http://localhost:3000/passwords/${id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ websiteName, websiteLink, username, password })
-        });
-
-        editRow = null;
-        Swal.fire('Updated!', 'Your password has been updated.', 'success');
-    } else {
-        await fetch('http://localhost:3000/passwords', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ websiteName, websiteLink, username, password })
-        });
-        Swal.fire('Added!', 'Your password has been added.', 'success');
-    }
-
-    loadPasswords();
-
-    // Reset the form input fields
-    document.getElementById("websiteName").value = "";
-    document.getElementById("websiteLink").value = "";
-    document.getElementById("username").value = "";
-    document.getElementById("password").value = "";
-});
-
+// Prompts user for file upload when ACCESS button clicked. Sets uploadedFileText if uploaded file is valid.
 function encoderPromptFile() {
     let fileUpload = document.createElement("input");
     fileUpload.type = "file";
@@ -226,8 +163,23 @@ function encoderPromptFile() {
     document.body.removeChild(fileUpload);
 }
 
+
+
 let editRow = null;
 
+/*
+function openLinkInNewTab(link) {
+    const newTab = window.open(link, "_blank");
+    newTab.focus();
+}
+*/
+
+function deletePasswordSet(row) {
+    const tableBody = document.getElementById("passwordTableBody");
+    tableBody.removeChild(row);
+}
+
+// what happens what the EDIT button is clicked next to the password set
 function editPasswordSet(row) {
     const tableRow = row;
     const cells = tableRow.cells;
@@ -260,6 +212,88 @@ function editPasswordSet(row) {
     editRow = tableRow;
 }
 
+
+
+
+
+document.getElementById("passwordForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    document.getElementById("passwordFormSubmitButton").value = "ADD";
+    document.getElementById("passwordFormCancelButton").style.display = "none";
+
+    // Remove highlighted row class from each element that has it on it
+    let highlightedRowsArray = Array.from(document.getElementsByClassName("highlighted-row"));
+    highlightedRowsArray.forEach(row => {
+        row.classList.remove("highlighted-row");
+    });
+
+    // Retrieve form input values
+    const websiteName = document.getElementById("websiteName").value;
+    const websiteLink = document.getElementById("websiteLink").value;
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+
+    if (editRow) {
+        const cells = editRow.cells;
+        cells[0].textContent = websiteName;
+        cells[1].innerHTML = websiteLink !== "" ? `<a href="${websiteLink}" target="_blank">${websiteLink}</a>` : "";
+        cells[2].textContent = username;
+        cells[3].textContent = password;
+
+        editRow = null;
+    } else {
+        // Create a new row in the table with the input values
+        const tableBody = document.getElementById("passwordTableBody");
+        const newRow = tableBody.insertRow();
+
+        const cell1 = newRow.insertCell();
+        cell1.textContent = websiteName;
+        cell1.classList.add("websiteName-cell");
+
+        const cell2 = newRow.insertCell();
+        // adds the website and handles click on website
+        cell2.innerHTML = websiteLink !== "" ? `<a href="${websiteLink}" target="_blank">${websiteLink}</a>` : "";
+        cell2.classList.add("websiteLink-cell");
+
+        const cell3 = newRow.insertCell();
+        cell3.textContent = username;
+        cell3.classList.add("username-cell");
+
+        const cell4 = newRow.insertCell();
+        cell4.textContent = password;
+        cell4.classList.add("password-cell"); // Add the custom class to the password cell
+        cell4.addEventListener("click", function() {
+            copyToClipboard(password);
+        });
+
+        const cell5 = newRow.insertCell();
+        const editBtn = document.createElement("span");
+        editBtn.className = "edit-btn";
+        editBtn.textContent = "Edit";
+        editBtn.addEventListener("click", function() {
+            editPasswordSet(newRow);
+        });
+        cell5.appendChild(editBtn);
+
+        const cell6 = newRow.insertCell();
+        const deleteBtn = document.createElement("span");
+        deleteBtn.className = "delete-btn";
+        deleteBtn.textContent = "Delete";
+        deleteBtn.addEventListener("click", function() {
+            deletePasswordSet(newRow);
+        });
+        cell6.appendChild(deleteBtn);
+    }
+
+    // Reset the form input fields
+    document.getElementById("websiteName").value = "";
+    document.getElementById("websiteLink").value = "";
+    document.getElementById("username").value = "";
+    document.getElementById("password").value = "";
+});
+
+
 function editPasswordCancel() {
     document.getElementById("passwordFormCancelButton").style.display = "none";
 
@@ -279,6 +313,3 @@ function editPasswordCancel() {
 
     document.getElementById("passwordFormSubmitButton").value = "ADD";
 }
-
-// Load passwords on page load
-document.addEventListener('DOMContentLoaded', loadPasswords);
